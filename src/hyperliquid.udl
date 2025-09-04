@@ -1,0 +1,82 @@
+namespace hyperliquid {
+    [Throws=HyperliquidError]
+    HyperliquidExchange create_exchange_client(string private_key, BaseUrl base_url);
+    
+    [Throws=HyperliquidError] 
+    HyperliquidInfo create_info_client(BaseUrl base_url);
+};
+
+[Error]
+interface HyperliquidError {
+    InvalidPrivateKey(string message);
+    NetworkError(string message);
+    ApiError(string message);
+    InvalidInput(string message);
+};
+
+enum BaseUrl {
+    "Mainnet",
+    "Testnet",
+};
+
+dictionary OrderRequest {
+    string asset;
+    boolean is_buy;
+    double size;
+    double price;
+    boolean reduce_only;
+};
+
+dictionary CancelRequest {
+    string asset;
+    u64 oid;
+};
+
+dictionary UserState {
+    string address;
+    double margin_summary_equity;
+    double margin_summary_account_value;
+    double margin_summary_total_margin_used;
+};
+
+dictionary OpenOrder {
+    string asset;
+    boolean is_buy;
+    double size;
+    double price;
+    u64 oid;
+    u64 timestamp;
+};
+
+dictionary UserBalance {
+    string token;
+    double hold;
+    double total;
+};
+
+interface HyperliquidExchange {
+    string get_wallet_address();
+    
+    [Throws=HyperliquidError]
+    string place_order(OrderRequest order);
+    
+    [Throws=HyperliquidError]
+    string cancel_order(CancelRequest cancel);
+    
+    [Throws=HyperliquidError]
+    string cancel_all_orders(string? asset);
+};
+
+interface HyperliquidInfo {
+    [Throws=HyperliquidError]
+    UserState get_user_state(string address);
+    
+    [Throws=HyperliquidError]
+    sequence<OpenOrder> get_open_orders(string address);
+    
+    [Throws=HyperliquidError]
+    sequence<UserBalance> get_user_balances(string address);
+    
+    [Throws=HyperliquidError]
+    record<string, string> get_all_mids();
+};

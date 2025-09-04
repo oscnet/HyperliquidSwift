@@ -1,0 +1,4 @@
+module hyperliquidFFI {
+    header "hyperliquidFFI.h"
+    export *
+}

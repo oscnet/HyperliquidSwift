@@ -1,0 +1,21 @@
+# Rust
+/target
+Cargo.lock
+
+# Swift
+.build/
+*.swiftpm
+
+# IDE
+.vscode/
+.idea/
+
+# Environment files
+.env
+.env.local
+
+# macOS
+.DS_Store
+
+# Bindings (regenerated)
+bindings/
