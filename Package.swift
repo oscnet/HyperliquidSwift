@@ -1,4 +1,4 @@
-// swift-tools-version: 5.7
+// swift-tools-version: 6.2
 import PackageDescription
 
 let package = Package(
@@ -12,7 +12,9 @@ let package = Package(
             name: "HyperliquidSwift",
             targets: ["HyperliquidSwift"])
     ],
-    dependencies: [],
+    dependencies: [
+        .package(url: "https://github.com/swiftlang/swift-testing", branch: "main")
+    ],
     targets: [
         .systemLibrary(
             name: "CHyperliquidSwift",
@@ -30,6 +32,9 @@ let package = Package(
         ),
         .testTarget(
             name: "HyperliquidSwiftTests",
-            dependencies: ["HyperliquidSwift"])
+            dependencies: [
+                "HyperliquidSwift",
+                .product(name: "Testing", package: "swift-testing")
+            ])
     ]
 )
