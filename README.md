@@ -84,6 +84,47 @@ let openOrders = try infoClient.getOpenOrders(address: "0x...")
 let mids = try infoClient.getAllMids()
 ```
 
+## Generating Swift Bindings
+
+To regenerate Swift bindings from the Rust code:
+
+### Prerequisites
+- Rust toolchain with cargo
+- The project must be built first
+
+### Steps
+
+1. **Build the Rust library**:
+```bash
+cargo build --release
+```
+
+2. **Generate Swift bindings**:
+```bash
+cargo run --features=uniffi/cli --bin uniffi-bindgen generate --library target/release/libhyperliquid_swift.dylib --language swift --out-dir bindings
+```
+
+### Generated Files
+
+This will create the following files in the `bindings/` directory:
+- `hyperliquid.swift` - Swift API bindings (~49KB)
+- `hyperliquidFFI.h` - C header file (~29KB)
+- `hyperliquidFFI.modulemap` - Swift module map
+
+### Configuration
+
+The project uses:
+- UniFFI 0.28 with CLI features enabled
+- Custom `uniffi-bindgen.rs` binary for generating bindings
+- Library crate types: both `cdylib` and `staticlib`
+
+### Troubleshooting
+
+If you encounter errors:
+- Ensure the library is built first: `cargo build --release`
+- Check that the library file exists: `target/release/libhyperliquid_swift.dylib`
+- Warning about `swiftformat` is harmless and doesn't affect functionality
+
 ## Deployment
 
 ### Prerequisites
@@ -144,7 +185,7 @@ cargo build --release
 
 2. **Generate Swift bindings**:
 ```bash
-cargo run --bin generate-bindings
+cargo run --features=uniffi/cli --bin uniffi-bindgen generate --library target/release/libhyperliquid_swift.dylib --language swift --out-dir bindings
 ```
 
 3. **Test the Swift package** (optional):
@@ -245,6 +286,29 @@ This library uses Mozilla's UniFFI to generate language bindings:
 - **Private Keys**: Must be provided as hex strings with 0x prefix
 - **Error Messages**: Some error messages may be technical (from underlying Rust library)
 
+## Development Commands
+
+### Quick Reference
+
+```bash
+# Build the library
+cargo build --release
+
+# Generate Swift bindings (CORRECT METHOD)
+cargo run --features=uniffi/cli --bin uniffi-bindgen generate --library target/release/libhyperliquid_swift.dylib --language swift --out-dir bindings
+
+# Clean and rebuild everything
+cargo clean && cargo build --release
+
+# One-liner: build and generate bindings
+cargo build --release && cargo run --features=uniffi/cli --bin uniffi-bindgen generate --library target/release/libhyperliquid_swift.dylib --language swift --out-dir bindings
+```
+
+### Generated Files Location
+- `bindings/hyperliquid.swift` - Swift API bindings (~49KB)
+- `bindings/hyperliquidFFI.h` - C header file (~29KB) 
+- `bindings/hyperliquidFFI.modulemap` - Swift module map
+
 ## Contributing
 
 To extend this library:
@@ -252,7 +316,7 @@ To extend this library:
 1. Modify `src/lib.rs` to add new wrapper functions
 2. Update `src/hyperliquid.udl` to expose the new functions to Swift
 3. Rebuild with `cargo build --release`
-4. Regenerate bindings with `cargo run --bin generate-bindings`
+4. Regenerate bindings with `cargo run --features=uniffi/cli --bin uniffi-bindgen generate --library target/release/libhyperliquid_swift.dylib --language swift --out-dir bindings`
 5. Test the updated Swift API
 
 ## License
