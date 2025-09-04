@@ -1,5 +1,4 @@
-module CHyperliquidSwift {
+module hyperliquidFFI {
     header "hyperliquidFFI.h"
-    link "hyperliquid_swift"
     export *
 }

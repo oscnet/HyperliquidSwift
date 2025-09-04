@@ -47,6 +47,81 @@ func testCancelRequest() {
     #expect(cancelRequest.oid == 12345)
 }
 
+@Test("Sync API Usage Example")
+func testSyncAPIUsage() throws {
+    print("🔄 Testing synchronous API calls...")
+    
+    // All API calls are synchronous - no async/await needed
+    let infoClient = try createInfoClient(baseUrl: .mainnet)
+    
+    // Direct synchronous call
+    let mids = try infoClient.getAllMids()
+    print("📊 Retrieved \(mids.count) market prices synchronously")
+    
+    // Example: Get specific coin prices
+    if let btcPrice = mids["BTC"] {
+        print("₿ BTC Price: $\(btcPrice)")
+    }
+    
+    if let ethPrice = mids["ETH"] {
+        print("🔷 ETH Price: $\(ethPrice)")
+    }
+    
+    if let solPrice = mids["SOL"] {
+        print("🟣 SOL Price: $\(solPrice)")
+    }
+    
+    print("✅ All API calls completed synchronously")
+}
+
+@Test("Async API Usage Example")
+func testAsyncAPIUsage() async throws {
+    print("🔄 Testing asynchronous API calls...")
+    
+    // All async API calls use Swift's native async/await
+    let infoClient = try createInfoClient(baseUrl: .mainnet)
+    
+    // Direct asynchronous call - notice the 'await' keyword
+    let mids = try await infoClient.getAllMidsAsync()
+    print("📊 Retrieved \(mids.count) market prices asynchronously")
+    
+    // Example: Get specific coin prices asynchronously
+    if let btcPrice = mids["BTC"] {
+        print("₿ BTC Price: $\(btcPrice)")
+    }
+    
+    if let ethPrice = mids["ETH"] {
+        print("🔷 ETH Price: $\(ethPrice)")
+    }
+    
+    if let solPrice = mids["SOL"] {
+        print("🟣 SOL Price: $\(solPrice)")
+    }
+    
+    print("✅ All async API calls completed successfully")
+}
+
+@Test("Async vs Sync Performance Comparison")
+func testAsyncVsSyncPerformance() async throws {
+    print("⚡ Comparing async vs sync performance...")
+    
+    let infoClient = try createInfoClient(baseUrl: .mainnet)
+    
+    // Test sync performance
+    let syncStart = CFAbsoluteTimeGetCurrent()
+    _ = try infoClient.getAllMids()
+    let syncTime = CFAbsoluteTimeGetCurrent() - syncStart
+    print("🔄 Sync call took: \(String(format: "%.3f", syncTime))s")
+    
+    // Test async performance
+    let asyncStart = CFAbsoluteTimeGetCurrent()
+    _ = try await infoClient.getAllMidsAsync()
+    let asyncTime = CFAbsoluteTimeGetCurrent() - asyncStart
+    print("⚡ Async call took: \(String(format: "%.3f", asyncTime))s")
+    
+    print("📊 Performance comparison complete")
+}
+
 @Test("SOL Trading on Mainnet - Place and Cancel Order")
 func testSOLTradingMainnet() throws {
     // Load private key from environment

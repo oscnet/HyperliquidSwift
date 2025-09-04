@@ -3,7 +3,6 @@
 
 // swiftlint:disable all
 import Foundation
-import CHyperliquidSwift
 
 // Depending on the consumer's build setup, the low-level FFI code
 // might be in a separate module, or it might be compiled inline into
@@ -353,7 +352,7 @@ private func uniffiTraitInterfaceCallWithError<T, E>(
         callStatus.pointee.errorBuf = FfiConverterString.lower(String(describing: error))
     }
 }
-fileprivate class UniffiHandleMap<T> {
+fileprivate class UniffiHandleMap<T>: @unchecked Sendable {
     private var map: [UInt64: T] = [:]
     private let lock = NSLock()
     private var currentHandle: UInt64 = 1
@@ -501,11 +500,17 @@ public protocol HyperliquidExchangeProtocol : AnyObject {
     
     func cancelAllOrders(asset: String?) throws  -> String
     
+    func cancelAllOrdersAsync(asset: String?) async throws  -> String
+    
     func cancelOrder(cancel: CancelRequest) throws  -> String
+    
+    func cancelOrderAsync(cancel: CancelRequest) async throws  -> String
     
     func getWalletAddress()  -> String
     
     func placeOrder(order: OrderRequest) throws  -> String
+    
+    func placeOrderAsync(order: OrderRequest) async throws  -> String
     
 }
 
@@ -567,12 +572,46 @@ open func cancelAllOrders(asset: String?)throws  -> String {
 })
 }
     
+open func cancelAllOrdersAsync(asset: String?)async throws  -> String {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_hyperliquid_swift_fn_method_hyperliquidexchange_cancel_all_orders_async(
+                    self.uniffiClonePointer(),
+                    FfiConverterOptionString.lower(asset)
+                )
+            },
+            pollFunc: ffi_hyperliquid_swift_rust_future_poll_rust_buffer,
+            completeFunc: ffi_hyperliquid_swift_rust_future_complete_rust_buffer,
+            freeFunc: ffi_hyperliquid_swift_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypeHyperliquidError.lift
+        )
+}
+    
 open func cancelOrder(cancel: CancelRequest)throws  -> String {
     return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeHyperliquidError.lift) {
     uniffi_hyperliquid_swift_fn_method_hyperliquidexchange_cancel_order(self.uniffiClonePointer(),
         FfiConverterTypeCancelRequest.lower(cancel),$0
     )
 })
+}
+    
+open func cancelOrderAsync(cancel: CancelRequest)async throws  -> String {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_hyperliquid_swift_fn_method_hyperliquidexchange_cancel_order_async(
+                    self.uniffiClonePointer(),
+                    FfiConverterTypeCancelRequest.lower(cancel)
+                )
+            },
+            pollFunc: ffi_hyperliquid_swift_rust_future_poll_rust_buffer,
+            completeFunc: ffi_hyperliquid_swift_rust_future_complete_rust_buffer,
+            freeFunc: ffi_hyperliquid_swift_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypeHyperliquidError.lift
+        )
 }
     
 open func getWalletAddress() -> String {
@@ -588,6 +627,23 @@ open func placeOrder(order: OrderRequest)throws  -> String {
         FfiConverterTypeOrderRequest.lower(order),$0
     )
 })
+}
+    
+open func placeOrderAsync(order: OrderRequest)async throws  -> String {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_hyperliquid_swift_fn_method_hyperliquidexchange_place_order_async(
+                    self.uniffiClonePointer(),
+                    FfiConverterTypeOrderRequest.lower(order)
+                )
+            },
+            pollFunc: ffi_hyperliquid_swift_rust_future_poll_rust_buffer,
+            completeFunc: ffi_hyperliquid_swift_rust_future_complete_rust_buffer,
+            freeFunc: ffi_hyperliquid_swift_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypeHyperliquidError.lift
+        )
 }
     
 
@@ -651,11 +707,19 @@ public protocol HyperliquidInfoProtocol : AnyObject {
     
     func getAllMids() throws  -> [String: String]
     
+    func getAllMidsAsync() async throws  -> [String: String]
+    
     func getOpenOrders(address: String) throws  -> [OpenOrder]
+    
+    func getOpenOrdersAsync(address: String) async throws  -> [OpenOrder]
     
     func getUserBalances(address: String) throws  -> [UserBalance]
     
+    func getUserBalancesAsync(address: String) async throws  -> [UserBalance]
+    
     func getUserState(address: String) throws  -> UserState
+    
+    func getUserStateAsync(address: String) async throws  -> UserState
     
 }
 
@@ -716,12 +780,46 @@ open func getAllMids()throws  -> [String: String] {
 })
 }
     
+open func getAllMidsAsync()async throws  -> [String: String] {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_hyperliquid_swift_fn_method_hyperliquidinfo_get_all_mids_async(
+                    self.uniffiClonePointer()
+                    
+                )
+            },
+            pollFunc: ffi_hyperliquid_swift_rust_future_poll_rust_buffer,
+            completeFunc: ffi_hyperliquid_swift_rust_future_complete_rust_buffer,
+            freeFunc: ffi_hyperliquid_swift_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterDictionaryStringString.lift,
+            errorHandler: FfiConverterTypeHyperliquidError.lift
+        )
+}
+    
 open func getOpenOrders(address: String)throws  -> [OpenOrder] {
     return try  FfiConverterSequenceTypeOpenOrder.lift(try rustCallWithError(FfiConverterTypeHyperliquidError.lift) {
     uniffi_hyperliquid_swift_fn_method_hyperliquidinfo_get_open_orders(self.uniffiClonePointer(),
         FfiConverterString.lower(address),$0
     )
 })
+}
+    
+open func getOpenOrdersAsync(address: String)async throws  -> [OpenOrder] {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_hyperliquid_swift_fn_method_hyperliquidinfo_get_open_orders_async(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(address)
+                )
+            },
+            pollFunc: ffi_hyperliquid_swift_rust_future_poll_rust_buffer,
+            completeFunc: ffi_hyperliquid_swift_rust_future_complete_rust_buffer,
+            freeFunc: ffi_hyperliquid_swift_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterSequenceTypeOpenOrder.lift,
+            errorHandler: FfiConverterTypeHyperliquidError.lift
+        )
 }
     
 open func getUserBalances(address: String)throws  -> [UserBalance] {
@@ -732,12 +830,46 @@ open func getUserBalances(address: String)throws  -> [UserBalance] {
 })
 }
     
+open func getUserBalancesAsync(address: String)async throws  -> [UserBalance] {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_hyperliquid_swift_fn_method_hyperliquidinfo_get_user_balances_async(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(address)
+                )
+            },
+            pollFunc: ffi_hyperliquid_swift_rust_future_poll_rust_buffer,
+            completeFunc: ffi_hyperliquid_swift_rust_future_complete_rust_buffer,
+            freeFunc: ffi_hyperliquid_swift_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterSequenceTypeUserBalance.lift,
+            errorHandler: FfiConverterTypeHyperliquidError.lift
+        )
+}
+    
 open func getUserState(address: String)throws  -> UserState {
     return try  FfiConverterTypeUserState.lift(try rustCallWithError(FfiConverterTypeHyperliquidError.lift) {
     uniffi_hyperliquid_swift_fn_method_hyperliquidinfo_get_user_state(self.uniffiClonePointer(),
         FfiConverterString.lower(address),$0
     )
 })
+}
+    
+open func getUserStateAsync(address: String)async throws  -> UserState {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_hyperliquid_swift_fn_method_hyperliquidinfo_get_user_state_async(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(address)
+                )
+            },
+            pollFunc: ffi_hyperliquid_swift_rust_future_poll_rust_buffer,
+            completeFunc: ffi_hyperliquid_swift_rust_future_complete_rust_buffer,
+            freeFunc: ffi_hyperliquid_swift_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeUserState.lift,
+            errorHandler: FfiConverterTypeHyperliquidError.lift
+        )
 }
     
 
@@ -1452,6 +1584,52 @@ fileprivate struct FfiConverterDictionaryStringString: FfiConverterRustBuffer {
         return dict
     }
 }
+private let UNIFFI_RUST_FUTURE_POLL_READY: Int8 = 0
+private let UNIFFI_RUST_FUTURE_POLL_MAYBE_READY: Int8 = 1
+
+fileprivate let uniffiContinuationHandleMap = UniffiHandleMap<UnsafeContinuation<Int8, Never>>()
+
+fileprivate func uniffiRustCallAsync<F, T>(
+    rustFutureFunc: () -> UInt64,
+    pollFunc: (UInt64, @escaping UniffiRustFutureContinuationCallback, UInt64) -> (),
+    completeFunc: (UInt64, UnsafeMutablePointer<RustCallStatus>) -> F,
+    freeFunc: (UInt64) -> (),
+    liftFunc: (F) throws -> T,
+    errorHandler: ((RustBuffer) throws -> Swift.Error)?
+) async throws -> T {
+    // Make sure to call uniffiEnsureInitialized() since future creation doesn't have a
+    // RustCallStatus param, so doesn't use makeRustCall()
+    uniffiEnsureInitialized()
+    let rustFuture = rustFutureFunc()
+    defer {
+        freeFunc(rustFuture)
+    }
+    var pollResult: Int8;
+    repeat {
+        pollResult = await withUnsafeContinuation {
+            pollFunc(
+                rustFuture,
+                uniffiFutureContinuationCallback,
+                uniffiContinuationHandleMap.insert(obj: $0)
+            )
+        }
+    } while pollResult != UNIFFI_RUST_FUTURE_POLL_READY
+
+    return try liftFunc(makeRustCall(
+        { completeFunc(rustFuture, $0) },
+        errorHandler: errorHandler
+    ))
+}
+
+// Callback handlers for an async calls.  These are invoked by Rust when the future is ready.  They
+// lift the return value or error and resume the suspended function.
+fileprivate func uniffiFutureContinuationCallback(handle: UInt64, pollResult: Int8) {
+    if let continuation = try? uniffiContinuationHandleMap.remove(handle: handle) {
+        continuation.resume(returning: pollResult)
+    } else {
+        print("uniffiFutureContinuationCallback invalid handle")
+    }
+}
 public func createExchangeClient(privateKey: String, baseUrl: BaseUrl)throws  -> HyperliquidExchange {
     return try  FfiConverterTypeHyperliquidExchange.lift(try rustCallWithError(FfiConverterTypeHyperliquidError.lift) {
     uniffi_hyperliquid_swift_fn_func_create_exchange_client(
@@ -1492,7 +1670,13 @@ private let initializationResult: InitializationResult = {
     if (uniffi_hyperliquid_swift_checksum_method_hyperliquidexchange_cancel_all_orders() != 41162) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_hyperliquid_swift_checksum_method_hyperliquidexchange_cancel_all_orders_async() != 28691) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_hyperliquid_swift_checksum_method_hyperliquidexchange_cancel_order() != 30438) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_hyperliquid_swift_checksum_method_hyperliquidexchange_cancel_order_async() != 54346) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_hyperliquid_swift_checksum_method_hyperliquidexchange_get_wallet_address() != 31106) {
@@ -1501,16 +1685,31 @@ private let initializationResult: InitializationResult = {
     if (uniffi_hyperliquid_swift_checksum_method_hyperliquidexchange_place_order() != 36280) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_hyperliquid_swift_checksum_method_hyperliquidexchange_place_order_async() != 19762) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_hyperliquid_swift_checksum_method_hyperliquidinfo_get_all_mids() != 13180) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_hyperliquid_swift_checksum_method_hyperliquidinfo_get_all_mids_async() != 59295) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_hyperliquid_swift_checksum_method_hyperliquidinfo_get_open_orders() != 41245) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_hyperliquid_swift_checksum_method_hyperliquidinfo_get_open_orders_async() != 45409) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_hyperliquid_swift_checksum_method_hyperliquidinfo_get_user_balances() != 54696) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_hyperliquid_swift_checksum_method_hyperliquidinfo_get_user_balances_async() != 51031) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_hyperliquid_swift_checksum_method_hyperliquidinfo_get_user_state() != 26354) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_hyperliquid_swift_checksum_method_hyperliquidinfo_get_user_state_async() != 24127) {
         return InitializationResult.apiChecksumMismatch
     }
 

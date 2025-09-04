@@ -132,6 +132,23 @@ impl HyperliquidExchange {
         })
     }
     
+    pub async fn place_order_async(&self, order: OrderRequest) -> Result<String, HyperliquidError> {
+        let client_order = ClientOrderRequest {
+            asset: order.asset,
+            is_buy: order.is_buy,
+            reduce_only: order.reduce_only,
+            limit_px: order.price,
+            sz: order.size,
+            order_type: ClientOrder::Limit(ClientLimit {
+                tif: "Gtc".to_string(),
+            }),
+            cloid: None,
+        };
+        
+        let response = self.client.order(client_order, None).await?;
+        Ok(format!("{:?}", response))
+    }
+    
     pub fn cancel_order(&self, cancel: CancelRequest) -> Result<String, HyperliquidError> {
         self.runtime.block_on(async {
             let cancel_req = ClientCancelRequest {
@@ -142,6 +159,16 @@ impl HyperliquidExchange {
             let response = self.client.cancel(cancel_req, None).await?;
             Ok(format!("{:?}", response))
         })
+    }
+    
+    pub async fn cancel_order_async(&self, cancel: CancelRequest) -> Result<String, HyperliquidError> {
+        let cancel_req = ClientCancelRequest {
+            asset: cancel.asset,
+            oid: cancel.oid,
+        };
+        
+        let response = self.client.cancel(cancel_req, None).await?;
+        Ok(format!("{:?}", response))
     }
     
     pub fn cancel_all_orders(&self, asset: Option<String>) -> Result<String, HyperliquidError> {
@@ -166,6 +193,28 @@ impl HyperliquidExchange {
             
             Ok(format!("{:?}", response))
         })
+    }
+    
+    pub async fn cancel_all_orders_async(&self, asset: Option<String>) -> Result<String, HyperliquidError> {
+        let response = if let Some(asset_name) = asset {
+            let cancel_req = ClientCancelRequest {
+                asset: asset_name,
+                oid: 0, // Cancel all orders for this asset
+            };
+            self.client.bulk_cancel(vec![cancel_req], None).await?
+        } else {
+            // Cancel all orders for all assets
+            let mut cancel_reqs = Vec::new();
+            for asset_name in self.client.coin_to_asset.keys() {
+                cancel_reqs.push(ClientCancelRequest {
+                    asset: asset_name.clone(),
+                    oid: 0,
+                });
+            }
+            self.client.bulk_cancel(cancel_reqs, None).await?
+        };
+        
+        Ok(format!("{:?}", response))
     }
 }
 
@@ -202,6 +251,20 @@ impl HyperliquidInfo {
         })
     }
     
+    pub async fn get_user_state_async(&self, address: String) -> Result<UserState, HyperliquidError> {
+        let addr = address.parse::<Address>()
+            .map_err(|e| HyperliquidError::InvalidInput { message: e.to_string() })?;
+        
+        let state = self.client.user_state(addr).await?;
+        
+        Ok(UserState {
+            address,
+            margin_summary_equity: state.margin_summary.account_value.parse().unwrap_or(0.0),
+            margin_summary_account_value: state.margin_summary.account_value.parse().unwrap_or(0.0),
+            margin_summary_total_margin_used: state.margin_summary.total_margin_used.parse().unwrap_or(0.0),
+        })
+    }
+    
     pub fn get_open_orders(&self, address: String) -> Result<Vec<OpenOrder>, HyperliquidError> {
         self.runtime.block_on(async {
             let addr = address.parse::<Address>()
@@ -225,6 +288,27 @@ impl HyperliquidInfo {
         })
     }
     
+    pub async fn get_open_orders_async(&self, address: String) -> Result<Vec<OpenOrder>, HyperliquidError> {
+        let addr = address.parse::<Address>()
+            .map_err(|e| HyperliquidError::InvalidInput { message: e.to_string() })?;
+        
+        let orders = self.client.open_orders(addr).await?;
+        let mut result = Vec::new();
+        
+        for order in orders {
+            result.push(OpenOrder {
+                asset: order.coin,
+                is_buy: order.side == "B", // B for buy, A for sell
+                size: order.sz.parse().unwrap_or(0.0),
+                price: order.limit_px.parse().unwrap_or(0.0),
+                oid: order.oid,
+                timestamp: order.timestamp,
+            });
+        }
+        
+        Ok(result)
+    }
+    
     pub fn get_user_balances(&self, address: String) -> Result<Vec<UserBalance>, HyperliquidError> {
         self.runtime.block_on(async {
             let addr = address.parse::<Address>()
@@ -245,11 +329,34 @@ impl HyperliquidInfo {
         })
     }
     
+    pub async fn get_user_balances_async(&self, address: String) -> Result<Vec<UserBalance>, HyperliquidError> {
+        let addr = address.parse::<Address>()
+            .map_err(|e| HyperliquidError::InvalidInput { message: e.to_string() })?;
+        
+        let balances = self.client.user_token_balances(addr).await?;
+        let mut result = Vec::new();
+        
+        for balance in balances.balances {
+            result.push(UserBalance {
+                token: balance.coin,
+                hold: balance.hold.parse().unwrap_or(0.0),
+                total: balance.total.parse().unwrap_or(0.0),
+            });
+        }
+        
+        Ok(result)
+    }
+    
     pub fn get_all_mids(&self) -> Result<HashMap<String, String>, HyperliquidError> {
         self.runtime.block_on(async {
             let mids = self.client.all_mids().await?;
             Ok(mids)
         })
+    }
+    
+    pub async fn get_all_mids_async(&self) -> Result<HashMap<String, String>, HyperliquidError> {
+        let mids = self.client.all_mids().await?;
+        Ok(mids)
     }
 }
 

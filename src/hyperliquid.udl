@@ -60,23 +60,44 @@ interface HyperliquidExchange {
     [Throws=HyperliquidError]
     string place_order(OrderRequest order);
     
+    [Throws=HyperliquidError, Async]
+    string place_order_async(OrderRequest order);
+    
     [Throws=HyperliquidError]
     string cancel_order(CancelRequest cancel);
     
+    [Throws=HyperliquidError, Async]
+    string cancel_order_async(CancelRequest cancel);
+    
     [Throws=HyperliquidError]
     string cancel_all_orders(string? asset);
+    
+    [Throws=HyperliquidError, Async]
+    string cancel_all_orders_async(string? asset);
 };
 
 interface HyperliquidInfo {
     [Throws=HyperliquidError]
     UserState get_user_state(string address);
     
+    [Throws=HyperliquidError, Async]
+    UserState get_user_state_async(string address);
+    
     [Throws=HyperliquidError]
     sequence<OpenOrder> get_open_orders(string address);
+    
+    [Throws=HyperliquidError, Async]
+    sequence<OpenOrder> get_open_orders_async(string address);
     
     [Throws=HyperliquidError]
     sequence<UserBalance> get_user_balances(string address);
     
+    [Throws=HyperliquidError, Async]
+    sequence<UserBalance> get_user_balances_async(string address);
+    
     [Throws=HyperliquidError]
     record<string, string> get_all_mids();
+    
+    [Throws=HyperliquidError, Async]
+    record<string, string> get_all_mids_async();
 };
